@@ -1,0 +1,11 @@
+﻿  CLeapControllerIndex.cpp
+     Creating library C:\Users\riley\OneDrive\Documents\MSD\driver_leap\bin\win64\driver_leap.lib and object C:\Users\riley\OneDrive\Documents\MSD\driver_leap\bin\win64\driver_leap.exp
+  Generating code
+  55 of 848 functions ( 6.5%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    32 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  driver_leap.vcxproj -> C:\Users\riley\OneDrive\Documents\MSD\driver_leap\bin\win64\driver_leap.dll
+  Install Binary
+          1 file(s) copied.
+          1 file(s) copied.

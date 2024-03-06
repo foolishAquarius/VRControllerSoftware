@@ -1,0 +1,6 @@
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Release\leap_control.csproj.CoreCompileInputs.cache
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\bin\win64\leap_control.exe.config
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\bin\win64\leap_control.exe
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Release\leap_control.csproj.CopyComplete
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Release\leap_control.exe
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Release\leap_control.csproj.AssemblyReference.cache

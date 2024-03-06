@@ -1,0 +1,2 @@
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Debug\leap_control.csproj.AssemblyReference.cache
+C:\Users\riley\OneDrive\Documents\MSD\driver_leap\leap_control\obj\x64\Debug\leap_control.csproj.CoreCompileInputs.cache
