@@ -1,3 +1,4 @@
 /initialControllerDriver/*
 /.vscode/*
 /driver_leap/.vs/*
+/BluetoothControllerAPI/node_modules/*
