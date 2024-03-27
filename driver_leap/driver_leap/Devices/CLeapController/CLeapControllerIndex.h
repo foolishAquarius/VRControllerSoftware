@@ -44,10 +44,6 @@ class CLeapControllerIndex final : public CLeapController
     vr::VRBoneTransform_t m_boneTransform[HSB_Count];
     vr::VRInputComponentHandle_t m_skeletonHandle;
 
-    CURL* curl;
-    std::thread hardware_update_thread_;
-    std::atomic< bool > is_active_ = true;
-
     CLeapControllerIndex(const CLeapControllerIndex &that) = delete;
     CLeapControllerIndex& operator=(const CLeapControllerIndex &that) = delete;
 
@@ -60,8 +56,6 @@ class CLeapControllerIndex final : public CLeapController
     void UpdateGestures(const LEAP_HAND *p_hand) override;
     void UpdateInputInternal() override;
 
-    size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
-    void parseString(std::string input);
 public:
     enum IndexButton : size_t
     {
@@ -98,5 +92,5 @@ public:
 
     void SetButtonState(size_t p_button, bool p_state);
     void SetButtonValue(size_t p_button, float p_value);
-    void HardwareUpdateThread();
+    void SetGripState(bool p_state);
 };

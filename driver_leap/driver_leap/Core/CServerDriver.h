@@ -37,4 +37,11 @@ public:
     ~CServerDriver();
 
     void ProcessExternalMessage(const char *p_message);
+
+    //CURL* curl;
+    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
+    void parseString(std::string input);
+    void HardwareUpdateThread();
+    std::thread hardware_update_thread_;
+    std::atomic< bool > is_active_ = true;
 };

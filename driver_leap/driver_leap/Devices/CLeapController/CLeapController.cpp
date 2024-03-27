@@ -49,6 +49,7 @@ CLeapController::CLeapController()
 
     m_hand = CH_Left;
     m_type = CT_Invalid;
+
 }
 
 CLeapController::~CLeapController()
@@ -139,6 +140,41 @@ void CLeapController::RunFrame(const LEAP_HAND *p_hand)
             UpdateInput();
         }
         else vr::VRServerDriverHost()->TrackedDevicePoseUpdated(m_trackedDevice, m_pose, sizeof(vr::DriverPose_t));
+        /*
+        if (false) {
+            CURLcode res;
+            // Set the URL for the POST request
+            try {
+                const char* url = "http://localhost:5147/api/v1/port";
+                curl_easy_setopt(curl, CURLOPT_URL, url);
+
+                // Set the callback function to handle the response
+                std::string response;
+                curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CLeapController::WriteCallback);
+                curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+                // Perform the HTTP POST request
+                res = curl_easy_perform(curl);
+
+                // Check for errors
+                if (res != CURLE_OK) {
+                    printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+                }
+                else {
+                    // Print the response
+                    //printf("%s\n", response);
+                    DriverLog("Parsing Controller Data");
+                    CLeapController::parseString(response);
+                    //cout << response << endl;
+                }
+
+            }
+            catch (...) {
+                printf("ERROR on Read");
+            }
+        }
+        */
     }
 }
 

@@ -1,1 +1,2 @@
 C:\Users\riley\OneDrive\Documents\MSD\driver_leap\objs\driver_leap\x64\Release\driver_leap.vcxproj.CopyComplete
+C:\Users\riley\Documents\VRControllerSoftware\driver_leap\objs\driver_leap\x64\Release\driver_leap.vcxproj.CopyComplete

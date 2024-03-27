@@ -29,5 +29,5 @@
 
 #include "pugixml.hpp"
 
-#include "curl/curl.h"
+#include <curl/curl.h>
 #include "Utils/driverlog.h"

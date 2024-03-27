@@ -46,6 +46,11 @@ btSerial.findSerialPortChannel(address, function (channel) {
               }
               //console.log('Received data:', buffer.toString('utf-8'));
           });
+          // Handle close event
+          btSerial.on('close', function () {
+            console.log('Disconnected from Bluetooth device');
+            // Perform any cleanup or reconnection logic here
+        });
       });
   }, function () {
       console.error('Connection failed');

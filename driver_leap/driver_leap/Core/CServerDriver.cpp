@@ -128,6 +128,54 @@ vr::EVRInitError CServerDriver::Init(vr::IVRDriverContext *pDriverContext)
     l_infoProcess.cb = sizeof(STARTUPINFOA);
     CreateProcessA(l_appPath.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, l_path.c_str(), &l_infoProcess, &l_monitorInfo);
 
+    hardware_update_thread_ = std::thread(&CServerDriver::HardwareUpdateThread, this);
+    hardware_update_thread_.detach();
+    /*
+    if (!curl) curl = curl_easy_init();
+    if (!curl) {
+        DriverLog("Failed to initialize libcurl\n");
+    }
+    else {
+        DriverLog("libcurl initialized\n");
+        hardware_update_thread_ = std::thread(&CServerDriver::HardwareUpdateThread, this);
+        hardware_update_thread_.detach();
+        //hardware_update_thread_ = std::thread(&CLeapControllerIndex::HardwareUpdateThread, this);
+        //hardware_update_thread_.detach();
+        
+        CURLcode res;
+        // Set the URL for the POST request
+        try {
+            const char* url = "http://localhost:5147/api/v1/port";
+            curl_easy_setopt(curl, CURLOPT_URL, url);
+
+            // Set the callback function to handle the response
+            std::string response;
+            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CServerDriver::WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+            // Perform the HTTP POST request
+            res = curl_easy_perform(curl);
+
+            // Check for errors
+            if (res != CURLE_OK) {
+                printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            }
+            else {
+                // Print the response
+                //printf("%s\n", response);
+                DriverLog("Parsing Controller Data");
+                CServerDriver::parseString(response);
+                //cout << response << endl;
+            }
+
+        }
+        catch (...) {
+            printf("ERROR on Read");
+        }
+    }
+    */
+
     return vr::VRInitError_None;
 }
 
@@ -183,6 +231,49 @@ void CServerDriver::RunFrame()
             }
         }
     }
+
+    /*
+    DriverLog("TEST 1");
+    if (!curl) curl = curl_easy_init();
+    CURLcode res;
+    // Set the URL for the POST request
+    try {
+        const char* url = "http://localhost:5147/api/v1/port";
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        DriverLog("TEST 2");
+
+        // Set the callback function to handle the response
+        std::string response;
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CServerDriver::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+        DriverLog("TEST 3");
+
+        // Perform the HTTP POST request
+        if (curl) {
+            res = curl_easy_perform(curl);
+
+            DriverLog("TEST 4");
+
+            // Check for errors
+            if (res != CURLE_OK) {
+                printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            }
+            else {
+                // Print the response
+                //printf("%s\n", response);
+                DriverLog("Parsing Controller Data");
+                CServerDriver::parseString(response);
+                //cout << response << endl;
+            }
+        }
+
+    }
+    catch (...) {
+        DriverLog("ERROR on Read");
+    }
+    */
 
     // Update devices
     for(size_t i = 0U; i < LCH_Count; i++)
@@ -330,4 +421,142 @@ void CServerDriver::ProcessExternalMessage(const char *p_message)
                 break;
         }
     }
+}
+
+void CServerDriver::HardwareUpdateThread()
+{
+    while (is_active_)
+    {
+        CURL* curl = curl_easy_init();
+        CURLcode res;
+        // Set the URL for the POST request
+        try {
+            const char* url = "http://localhost:5147/api/v1/port";
+            res = curl_easy_setopt(curl, CURLOPT_URL, url);
+
+            // Set the callback function to handle the response
+            std::string response;
+            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CServerDriver::WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+            /*
+            // Set the Accept header to specify the desired content type
+            const char* acceptHeader = "Accept: text/plain"; // Specify the content type you expect
+            struct curl_slist* headers = NULL;
+            headers = curl_slist_append(headers, acceptHeader);
+            res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            */
+            
+            // Perform the HTTP GET request
+            res = curl_easy_perform(curl);
+
+            // Check for errors
+            if (res != CURLE_OK) {
+                printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            }
+            else {
+                // Print the response
+                //printf("%s\n", response);
+                CServerDriver::parseString(response);
+                //cout << response << endl;
+            }
+            
+
+        }
+        catch (...) {
+            DriverLog("ERROR on Read");
+        }
+        curl_easy_cleanup(curl);
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    }
+}
+
+bool lastGripState = false; 
+
+void CServerDriver::parseString(std::string input) {
+    //DriverLog("%s", input);
+    std::istringstream outerStream(input);
+
+    std::string control_cmd;
+    char cmd_delim = '\t';
+
+    while (std::getline(outerStream, control_cmd, cmd_delim)) {
+
+        std::istringstream innerStream(control_cmd);
+        std::string control_name;
+        char element_delim = ';';
+
+        if (!std::getline(innerStream, control_name, element_delim)) break;
+
+        std::string control_data;
+
+        if (!std::getline(innerStream, control_data, element_delim)) break;
+
+        std::istringstream dataStream(control_data);
+        std::string data_element;
+        char data_delim = ':';
+        int xVal, yVal, buttonVal;
+
+        switch (control_name.at(0)) {
+        case 'J':
+            if (!std::getline(dataStream, data_element, data_delim)) break;
+            xVal = std::stoi(data_element);
+            m_controllers[0]->SetButtonState(CLeapControllerIndex::IB_TrackpadX, xVal);
+            //m_buttons[IB_TrackpadX]->SetValue(xVal);
+            //x.store(xVal);
+            if (!std::getline(dataStream, data_element, data_delim)) break;
+            yVal = std::stoi(data_element);
+            m_controllers[0]->SetButtonState(CLeapControllerIndex::IB_TrackpadY, yVal);
+            //m_buttons[IB_TrackpadY]->SetValue(yVal);
+            //y.store(yVal);
+            break;
+        case 'B':
+            buttonVal = std::stoi(control_data);
+
+            switch (control_name[2]) {
+            case 'B':
+                //m_controllers[0]->SetButtonState(CLeapControllerIndex::IB_AClick, buttonVal);
+                if (lastGripState != buttonVal) {
+                    m_controllers[0]->SetGripState(buttonVal);
+                    lastGripState = buttonVal;
+                }
+                //m_buttons[IB_AClick]->SetValue(buttonVal);
+                //B_val.store(buttonVal);
+                break;
+            case 'G':
+                m_controllers[0]->SetButtonState(CLeapControllerIndex::IB_BClick, buttonVal);
+                //m_buttons[IB_BClick]->SetValue(buttonVal);
+                //G_val.store(buttonVal);
+                break;
+            case 'R':
+                m_controllers[0]->SetButtonState(CLeapControllerIndex::IB_SystemClick, buttonVal);
+                //m_buttons[IB_SystemClick]->SetValue(buttonVal);
+                //R_val.store(buttonVal);
+                break;
+            default:
+                break;
+            }
+            break;
+        case 'G':
+            if (!std::getline(dataStream, data_element, data_delim)) break;
+            //roll.store(std::stof(data_element));
+            if (!std::getline(dataStream, data_element, data_delim)) break;
+            //pitch.store(std::stof(data_element));
+            if (!std::getline(dataStream, data_element, data_delim)) break;
+            //yaw.store(std::stof(data_element));
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+size_t CServerDriver::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    if (contents == NULL || nmemb<0) {
+        return 0; // Return 0 to indicate an error
+    }
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
 }

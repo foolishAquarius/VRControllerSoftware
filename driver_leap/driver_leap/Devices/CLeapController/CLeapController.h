@@ -23,6 +23,7 @@ class CLeapController : public vr::ITrackedDeviceServerDriver
     void* GetComponent(const char* pchComponentNameAndVersion);
     void DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize);
     vr::DriverPose_t GetPose();
+
 public:
     enum ControllerHand : unsigned char
     {
@@ -39,6 +40,36 @@ public:
 
         CT_Count,
         CT_Invalid = 0xFFU
+    };
+
+    enum IndexButton : size_t
+    {
+        IB_SystemClick = 0U,
+        IB_SystemTouch,
+        IB_TriggerClick,
+        IB_TriggerTouch,
+        IB_TriggerValue,
+        IB_TrackpadX,
+        IB_TrackpadY,
+        IB_TrackpadTouch,
+        IB_TrackpadForce,
+        IB_GripTouch,
+        IB_GripForce,
+        IB_GripValue,
+        IB_ThumbstickClick,
+        IB_ThumbstickTouch,
+        IB_ThumbstickX,
+        IB_ThumbstickY,
+        IB_AClick,
+        IB_ATouch,
+        IB_BClick,
+        IB_BTouch,
+        IB_FingerIndex,
+        IB_FingerMiddle,
+        IB_FingerRing,
+        IB_FingerPinky,
+
+        IB_Count
     };
 
     CLeapController();

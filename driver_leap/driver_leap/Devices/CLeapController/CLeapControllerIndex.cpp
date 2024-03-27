@@ -61,17 +61,6 @@ CLeapControllerIndex::CLeapControllerIndex(unsigned char p_hand)
         }
     }
 
-    curl = curl_easy_init();
-    if (!curl) {
-        DriverLog("Failed to initialize libcurl\n");
-    }
-    /*
-    else {
-        hardware_update_thread_ = std::thread(&CLeapControllerIndex::HardwareUpdateThread, this);
-        hardware_update_thread_.detach();
-    }
-    */
-
 }
 
 CLeapControllerIndex::~CLeapControllerIndex()
@@ -274,117 +263,26 @@ void CLeapControllerIndex::ActivateInternal()
 
 }
 
-void CLeapControllerIndex::HardwareUpdateThread()
+void CLeapControllerIndex::SetGripState(bool p_state)
 {
-    while (is_active_)
-    {
-        CURLcode res;
-        // Set the URL for the POST request
-        try {
-            const char* url = "http://localhost:5147/api/v1/port";
-            curl_easy_setopt(curl, CURLOPT_URL, url);
+    if (p_state) {
+        m_buttons[IB_TriggerValue]->SetValue(1.0);
+        m_buttons[IB_TriggerTouch]->SetState(true);
+        m_buttons[IB_TriggerClick]->SetState(true);
 
-            // Set the callback function to handle the response
-            std::string response;
-            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CLeapControllerIndex::WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
-            // Perform the HTTP POST request
-            res = curl_easy_perform(curl);
-
-            // Check for errors
-            if (res != CURLE_OK) {
-                printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            }
-            else {
-                // Print the response
-                //printf("%s\n", response);
-                CLeapControllerIndex::parseString(response);
-                //cout << response << endl;
-            }
-
-        }
-        catch (...) {
-            printf("ERROR on Read");
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        m_buttons[IB_GripValue]->SetValue(1.0);
+        m_buttons[IB_GripTouch]->SetState(true);
+        m_buttons[IB_GripForce]->SetValue(1.0);
     }
-}
+    else {
+        m_buttons[IB_TriggerValue]->SetValue(0.0);
+        m_buttons[IB_TriggerTouch]->SetState(false);
+        m_buttons[IB_TriggerClick]->SetState(false);
 
-void CLeapControllerIndex::parseString(std::string input) {
-    //DriverLog("%s", input);
-    std::istringstream outerStream(input);
-
-    std::string control_cmd;
-    char cmd_delim = '\t';
-
-    while (std::getline(outerStream, control_cmd, cmd_delim)) {
-
-        std::istringstream innerStream(control_cmd);
-        std::string control_name;
-        char element_delim = ';';
-
-        if (!std::getline(innerStream, control_name, element_delim)) break;
-
-        std::string control_data;
-
-        if (!std::getline(innerStream, control_data, element_delim)) break;
-
-        std::istringstream dataStream(control_data);
-        std::string data_element;
-        char data_delim = ':';
-        int xVal, yVal, buttonVal;
-
-        switch (control_name.at(0)) {
-        case 'J':
-            if (!std::getline(dataStream, data_element, data_delim)) break;
-            xVal = std::stoi(data_element);
-            //m_buttons[IB_TrackpadX]->SetValue(xVal);
-            //x.store(xVal);
-            if (!std::getline(dataStream, data_element, data_delim)) break;
-            yVal = std::stoi(data_element);
-            //m_buttons[IB_TrackpadY]->SetValue(yVal);
-            //y.store(yVal);
-            break;
-        case 'B':
-            buttonVal = std::stoi(control_data);
-
-            switch (control_name[2]) {
-            case 'B':
-                //m_buttons[IB_AClick]->SetValue(buttonVal);
-                //B_val.store(buttonVal);
-                break;
-            case 'G':
-                //m_buttons[IB_BClick]->SetValue(buttonVal);
-                //G_val.store(buttonVal);
-                break;
-            case 'R':
-                //m_buttons[IB_SystemClick]->SetValue(buttonVal);
-                //R_val.store(buttonVal);
-                break;
-            default:
-                break;
-            }
-            break;
-        case 'G':
-            if (!std::getline(dataStream, data_element, data_delim)) break;
-            //roll.store(std::stof(data_element));
-            if (!std::getline(dataStream, data_element, data_delim)) break;
-            //pitch.store(std::stof(data_element));
-            if (!std::getline(dataStream, data_element, data_delim)) break;
-            //yaw.store(std::stof(data_element));
-            break;
-        default:
-            break;
-        }
+        m_buttons[IB_GripValue]->SetValue(0.0);
+        m_buttons[IB_GripTouch]->SetState(false);
+        m_buttons[IB_GripForce]->SetValue(0.0);
     }
-}
-
-size_t CLeapControllerIndex::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
-{
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
 }
 
 void CLeapControllerIndex::UpdateGestures(const LEAP_HAND *p_hand)
@@ -393,7 +291,7 @@ void CLeapControllerIndex::UpdateGestures(const LEAP_HAND *p_hand)
     {
         std::vector<float> l_gestures;
         CGestureMatcher::GetGestures(p_hand, l_gestures);
-
+        /*
         m_buttons[IB_TriggerValue]->SetValue(l_gestures[CGestureMatcher::HG_Trigger]);
         m_buttons[IB_TriggerTouch]->SetState(l_gestures[CGestureMatcher::HG_Trigger] >= 0.5f);
         m_buttons[IB_TriggerClick]->SetState(l_gestures[CGestureMatcher::HG_Trigger] >= 0.75f);
@@ -406,7 +304,7 @@ void CLeapControllerIndex::UpdateGestures(const LEAP_HAND *p_hand)
         m_buttons[IB_FingerMiddle]->SetValue(l_gestures[CGestureMatcher::HG_MiddleBend]);
         m_buttons[IB_FingerRing]->SetValue(l_gestures[CGestureMatcher::HG_RingBend]);
         m_buttons[IB_FingerPinky]->SetValue(l_gestures[CGestureMatcher::HG_PinkyBend]);
-
+        */
         for(size_t i = 0U; i < 5U; i++)
         {
             const LEAP_DIGIT &l_finger = p_hand->digits[i];
@@ -466,36 +364,6 @@ void CLeapControllerIndex::UpdateGestures(const LEAP_HAND *p_hand)
             ConvertQuaternion(l_rotation, m_boneTransform[HSB_Aux_Thumb + i].orientation);
         }
 
-        CURLcode res;
-        // Set the URL for the POST request
-        try {
-            const char* url = "http://localhost:5147/api/v1/port";
-            curl_easy_setopt(curl, CURLOPT_URL, url);
-
-            // Set the callback function to handle the response
-            std::string response;
-            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CLeapControllerIndex::WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
-            // Perform the HTTP POST request
-            res = curl_easy_perform(curl);
-
-            // Check for errors
-            if (res != CURLE_OK) {
-                printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            }
-            else {
-                // Print the response
-                //printf("%s\n", response);
-                CLeapControllerIndex::parseString(response);
-                //cout << response << endl;
-            }
-
-        }
-        catch (...) {
-            printf("ERROR on Read");
-        }
     }
 }
 
